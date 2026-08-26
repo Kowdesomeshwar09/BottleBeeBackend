@@ -35,11 +35,17 @@ function noContent(res) {
 
 /**
  * Paginated list response.
+ *
  * @param {object} res
  * @param {Array}  rows
  * @param {{page:number, limit:number, total:number}} meta
+ * @param {string} [message]
+ * @param {object} [extra]  merged into the body alongside `data` and
+ *                          `pagination` — for aggregates that describe the whole
+ *                          result set rather than the current page, such as a
+ *                          review rating distribution.
  */
-function paginated(res, rows = [], meta = {}, message = 'Fetched successfully') {
+function paginated(res, rows = [], meta = {}, message = 'Fetched successfully', extra = {}) {
   const page = Number(meta.page) || 1;
   const limit = Number(meta.limit) || rows.length || 0;
   const total = Number(meta.total) || 0;
@@ -56,6 +62,7 @@ function paginated(res, rows = [], meta = {}, message = 'Fetched successfully') 
       hasNext: limit > 0 && page * limit < total,
       hasPrevious: page > 1,
     },
+    ...extra,
   });
 }
 

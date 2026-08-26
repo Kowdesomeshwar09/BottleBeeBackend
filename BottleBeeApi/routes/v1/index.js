@@ -40,9 +40,12 @@ router.use('/promotions', require('./promotion.routes'));
 router.use('/payments', require('./payment.routes'));
 router.use('/delivery', require('./delivery.routes'));
 
-// --- Notifications ----------------------------------------------------------
+// --- After the sale ---------------------------------------------------------
+router.use('/reviews', require('./review.routes'));
 router.use('/notifications', require('./notification.routes'));
 
-// TODO: mount as each module lands — reviews, admin.
+// --- Platform administration ------------------------------------------------
+router.use('/admin', require('./admin.routes'));
+
 
 module.exports = router;
