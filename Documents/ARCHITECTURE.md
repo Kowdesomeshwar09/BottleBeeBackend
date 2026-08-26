@@ -33,13 +33,13 @@ Backend folders sit directly under `BottleBeeApi/` (no `src/`), per spec section
 ```
 BottleBeeApi/
   config/        env loading, sequelize instance, constants, logger
-  controllers/   thin: read req.body -> call service -> centralized response
+  controllers/   business logic: read req.body, query, transact, respond
   middlewares/   auth, rbac, validate, errors, rate limits, uploads, audit ctx
   migrations/    the ONLY way schema changes
   models/        Sequelize models + associations
   routes/        versioned routers (/api/v1)
   seeders/       RBAC, super admin, compliance, catalog samples
-  services/      all business logic + transactions
+  services/      cross-cutting only (pricing, compliance, stock, notify)
   validators/    Joi schemas per module
   utils/         response, errors, jwt, pagination, state machine, audit
   swagger/       OpenAPI components + generator
@@ -55,18 +55,31 @@ BottleBeeApi/
    This is the project-wide convention; it keeps a single input contract.
 3. **Centralized responses only** — `utils/response.js`. A controller never calls
    `res.json()` directly and never leaks a Sequelize error.
-4. **Controllers are thin.** No business logic, no queries, no transactions.
-5. **Services own business logic and transactions.** Any multi-write operation
-   (checkout, order transition, inventory movement, refund) runs inside a
-   `sequelize.transaction()`.
-6. **Validation before service.** Every route composes
-   `validate(schema)` from `validators/` ahead of the controller.
-7. **Auth + RBAC at the route layer.** `authenticate` then
-   `authorize(PERMISSION)`. No endpoint reaches a service unauthenticated unless
-   it is explicitly public.
-8. **Swagger for every route** via JSDoc `@openapi` blocks in `routes/`.
-9. **Schema changes only via migrations.** `sequelize.sync()` is never used.
-10. **Soft delete everywhere** — Sequelize `paranoid: true` on `deleted_at`, plus
+4. **Business logic lives in the controller.** A controller function owns its
+   module end to end: the follow-up checks validation cannot express, the
+   Sequelize queries, the transaction, the audit write and the response. There is
+   **no service per module** — no `user.service.js` behind `user.controller.js`.
+   Module-private helpers sit at the top of the controller file that uses them.
+5. **`services/` is for cross-cutting logic only** — logic that more than one
+   controller genuinely calls. Today that is pricing, notifications, compliance
+   evaluation, inventory movements, coupon validation, vendor access guards, the
+   shared cart primitives and `requireProfile`. If exactly one controller needs
+   it, it does not belong here. If two controllers need it, it does — do not
+   duplicate it into both to satisfy rule 4.
+6. **Transactions belong to the controller function that owns the operation.**
+   Checkout, order transitions, inventory movements and refunds each open their
+   own `sequelize.transaction()` and pass it down into any shared service they
+   call, so a shared helper never commits independently of its caller.
+7. **Route middleware order is fixed:**
+   `validate(schema)` → `authenticate` → `authorize(PERMISSION)` → controller.
+   No endpoint reaches a controller unauthenticated unless it is explicitly
+   public.
+8. **Each controller function is wrapped in its own `try/catch`** and returns
+   through `utils/response.js`. `AppError` and the central error handler remain
+   the backstop for anything unanticipated.
+9. **Swagger for every route** via JSDoc `@openapi` blocks in `routes/`.
+10. **Schema changes only via migrations.** `sequelize.sync()` is never used.
+11. **Soft delete everywhere** — Sequelize `paranoid: true` on `deleted_at`, plus
     `deleted_by`. Queries exclude soft-deleted rows unless an admin/audit path
     explicitly opts in with `paranoid: false`.
 
@@ -77,7 +90,7 @@ BottleBeeApi/
   `firstName` maps to `first_name` automatically. API payloads are camelCase.
 * Model files: `PascalCase.js` matching the model name (`CustomerProfile.js`).
 * Everything else (controllers, services, routes, validators): `camelCase.js`
-  named after the module (`order.controller.js`, `order.service.js`).
+  named after the module (`order.controller.js`, `order.routes.js`).
 
 ### Audit fields
 
@@ -89,8 +102,9 @@ created_at, created_by, updated_at, updated_by, deleted_at, deleted_by, is_activ
 
 Sequelize handles `created_at` / `updated_at` / `deleted_at` via
 `timestamps: true, paranoid: true, underscored: true`. The `*_by` columns are
-explicit attributes (`createdBy`, `updatedBy`, `deletedBy`) written by services
-from `req.user.id`. `audit_logs` is exempt (append-only, `created_at` only).
+explicit attributes (`createdBy`, `updatedBy`, `deletedBy`) written by the
+controller from `req.user.id`. `audit_logs` is exempt (append-only, `created_at`
+only).
 
 ### Types
 

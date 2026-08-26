@@ -46,12 +46,11 @@ const router = express.Router();
  */
 router.post(
   '/serviceability',
-  optionalAuthenticate,
   validate(schemas.serviceabilitySchema),
+  optionalAuthenticate,
   controller.serviceability
 );
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -79,8 +78,9 @@ router.use(authenticate);
  */
 router.post(
   '/rules/list',
-  authorize(PERMISSIONS.COMPLIANCE_VIEW),
   validate(schemas.listRulesSchema),
+  authenticate,
+  authorize(PERMISSIONS.COMPLIANCE_VIEW),
   controller.list
 );
 
@@ -110,8 +110,9 @@ router.post(
  */
 router.post(
   '/rules/detail',
-  authorize(PERMISSIONS.COMPLIANCE_VIEW),
   validate(schemas.detailSchema),
+  authenticate,
+  authorize(PERMISSIONS.COMPLIANCE_VIEW),
   controller.detail
 );
 
@@ -164,8 +165,9 @@ router.post(
  */
 router.post(
   '/rules/save',
-  authorize(PERMISSIONS.COMPLIANCE_MANAGE),
   validate(schemas.upsertRuleSchema),
+  authenticate,
+  authorize(PERMISSIONS.COMPLIANCE_MANAGE),
   controller.save
 );
 
@@ -196,8 +198,9 @@ router.post(
  */
 router.post(
   '/rules/delete',
-  authorize(PERMISSIONS.COMPLIANCE_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.COMPLIANCE_MANAGE),
   controller.remove
 );
 

@@ -36,7 +36,7 @@ const router = express.Router();
  *           application/json:
  *             schema: { $ref: '#/components/schemas/PaginatedResponse' }
  */
-router.post('/list', optionalAuthenticate, validate(schemas.listBrandsSchema), controller.listBrands);
+router.post('/list', validate(schemas.listBrandsSchema), optionalAuthenticate, controller.listBrands);
 
 /**
  * @openapi
@@ -59,9 +59,8 @@ router.post('/list', optionalAuthenticate, validate(schemas.listBrandsSchema), c
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.post('/detail', optionalAuthenticate, validate(schemas.idSchema), controller.getBrand);
+router.post('/detail', validate(schemas.idSchema), optionalAuthenticate, controller.getBrand);
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -93,8 +92,9 @@ router.use(authenticate);
  */
 router.post(
   '/create',
-  authorize(PERMISSIONS.BRAND_MANAGE),
   validate(schemas.createBrandSchema),
+  authenticate,
+  authorize(PERMISSIONS.BRAND_MANAGE),
   controller.createBrand
 );
 
@@ -129,8 +129,9 @@ router.post(
  */
 router.post(
   '/update',
-  authorize(PERMISSIONS.BRAND_MANAGE),
   validate(schemas.updateBrandSchema),
+  authenticate,
+  authorize(PERMISSIONS.BRAND_MANAGE),
   controller.updateBrand
 );
 
@@ -156,8 +157,9 @@ router.post(
  */
 router.post(
   '/delete',
-  authorize(PERMISSIONS.BRAND_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.BRAND_MANAGE),
   controller.deleteBrand
 );
 

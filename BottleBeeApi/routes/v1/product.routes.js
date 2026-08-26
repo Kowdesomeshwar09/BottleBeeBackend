@@ -12,7 +12,6 @@ const schemas = require('../../validators/product.validator');
 
 const router = express.Router();
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -70,8 +69,9 @@ router.use(authenticate);
  */
 router.post(
   '/create',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.createProductSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.create
 );
 
@@ -112,8 +112,9 @@ router.post(
  */
 router.post(
   '/update',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.updateProductSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.update
 );
 
@@ -141,8 +142,9 @@ router.post(
  */
 router.post(
   '/submit-for-approval',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.submitForApproval
 );
 
@@ -179,8 +181,9 @@ router.post(
  */
 router.post(
   '/review',
-  authorize(PERMISSIONS.PRODUCT_APPROVE),
   validate(schemas.reviewProductSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_APPROVE),
   controller.review
 );
 
@@ -217,8 +220,9 @@ router.post(
  */
 router.post(
   '/list',
-  authorize(PERMISSIONS.PRODUCT_VIEW),
   validate(schemas.listProductsSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_VIEW),
   controller.list
 );
 
@@ -247,8 +251,9 @@ router.post(
  */
 router.post(
   '/detail',
-  authorize(PERMISSIONS.PRODUCT_VIEW),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_VIEW),
   controller.detail
 );
 
@@ -277,8 +282,9 @@ router.post(
  */
 router.post(
   '/delete',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.remove
 );
 
@@ -322,8 +328,9 @@ router.post(
  */
 router.post(
   '/variants/create',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.createVariantSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.createVariant
 );
 
@@ -360,8 +367,9 @@ router.post(
  */
 router.post(
   '/variants/update',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.updateVariantSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.updateVariant
 );
 
@@ -389,8 +397,9 @@ router.post(
  */
 router.post(
   '/variants/delete',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.deleteVariant
 );
 
@@ -429,9 +438,10 @@ router.post(
  */
 router.post(
   '/images/add',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   imageUpload.array('images', 10),
   validate(schemas.addImagesSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.addImages
 );
 
@@ -457,8 +467,9 @@ router.post(
  */
 router.post(
   '/images/set-primary',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.setPrimaryImage
 );
 
@@ -486,8 +497,9 @@ router.post(
  */
 router.post(
   '/images/delete',
-  authorize(PERMISSIONS.PRODUCT_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
   controller.deleteImage
 );
 

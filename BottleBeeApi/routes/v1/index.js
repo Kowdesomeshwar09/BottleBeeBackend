@@ -5,12 +5,37 @@ const express = require('express');
 const router = express.Router();
 
 /**
- * Version 1 router. Every module mounts here; the order is alphabetical apart
- * from health, which stays first so probes are matched cheaply.
+ * Version 1 router.
+ *
+ * Health comes first so load-balancer probes match on the cheapest route.
+ * Everything else is grouped by domain, roughly in the order a request travels
+ * through the platform: identity, then the people, then the catalog, then the
+ * purchase.
  */
+
+// --- Platform ---------------------------------------------------------------
 router.use('/health', require('./health.routes'));
 router.use('/auth', require('./auth.routes'));
 router.use('/users', require('./user.routes'));
 router.use('/rbac', require('./rbac.routes'));
+
+// --- People and compliance --------------------------------------------------
+router.use('/customers', require('./customer.routes'));
+router.use('/age-verifications', require('./ageVerification.routes'));
+router.use('/compliance', require('./compliance.routes'));
+router.use('/vendors', require('./vendor.routes'));
+
+// --- Catalog ----------------------------------------------------------------
+router.use('/categories', require('./category.routes'));
+router.use('/brands', require('./brand.routes'));
+router.use('/products', require('./product.routes'));
+router.use('/catalog', require('./publicCatalog.routes'));
+router.use('/inventory', require('./inventory.routes'));
+
+// --- Notifications ----------------------------------------------------------
+router.use('/notifications', require('./notification.routes'));
+
+// TODO: mount as each module lands — cart, orders, payments, delivery,
+// coupons, promotions, reviews, admin.
 
 module.exports = router;

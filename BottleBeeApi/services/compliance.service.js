@@ -1,38 +1,38 @@
 'use strict';
 
-const { Op } = require('sequelize');
-
 const config = require('../config');
 const logger = require('../config/logger');
 const { ComplianceRule } = require('../models');
-const { AUDIT_ACTIONS } = require('../config/constants');
 const AppError = require('../utils/AppError');
-const { buildPagination, toPageMeta } = require('../utils/pagination');
-const { recordAudit } = require('../utils/audit');
 const { calculateAge, isWithinTimeWindow, toDateOnly } = require('../utils/dates');
 
 /**
- * Regional alcohol compliance.
+ * Regional alcohol compliance — SHARED SERVICE.
  *
- * This is the single place that decides whether a sale is legal. Checkout,
- * order placement and payment confirmation all route through
- * `evaluateOrder` / `assertOrderCompliant`, so a rule change takes effect
- * everywhere at once and nothing can bypass it.
+ * This file holds only what more than one controller calls. Rule administration
+ * (list / detail / save / delete) lives in `compliance.controller.js`, per the
+ * project convention that business logic belongs to its controller.
  *
- * Supported controls per region:
- *   minimumAge             legal drinking age
- *   alcoholSaleStart/End   permitted sale window (wrapping past midnight is fine)
- *   dryDay                 region-wide prohibition switch
- *   maxOrderAmount         value cap per order
- *   maxQuantityPerOrder    unit cap per order
- *   ruleMetadata.dryDates  ['2026-01-26'] specific prohibition dates
+ * What stays here is the decision "may this sale legally happen?", because the
+ * cart, order, age-verification and customer-address controllers all have to ask
+ * it and must all get the same answer. Duplicating it would be the one way to
+ * end up with a checkout that permits what the cart refused.
+ *
+ * Controls honoured per region:
+ *   minimumAge                legal drinking age
+ *   alcoholSaleStart/EndTime  permitted sale window (may wrap past midnight)
+ *   dryDay                    region-wide prohibition switch
+ *   maxOrderAmount            value cap per order
+ *   maxQuantityPerOrder       unit cap per order
+ *   ruleMetadata.dryDates     ['2026-01-26'] specific prohibition dates
  *   ruleMetadata.blockedTypes ['LIQUEUR'] product types not sellable here
- *   ruleMetadata.states    ['Telangana'] used to resolve a region from an address
+ *   ruleMetadata.states       ['Telangana'] resolves a region from an address
  */
 
-const SORTABLE = ['id', 'regionCode', 'minimumAge', 'createdAt', 'updatedAt'];
-
-/** Fallback used only when no rule row matches; deliberately conservative. */
+/**
+ * Applied when no rule row matches. Deliberately conservative: an unconfigured
+ * region must never end up more permissive than a configured one.
+ */
 function fallbackRule() {
   return {
     regionCode: config.compliance.defaultRegionCode,
@@ -50,7 +50,7 @@ function fallbackRule() {
 
 /**
  * Resolves which region governs an address.
- * Explicit `regionCode` wins; otherwise the address state is matched against
+ * An explicit `regionCode` wins; otherwise the address state is matched against
  * `ruleMetadata.states`; otherwise the configured default applies.
  */
 async function resolveRegionCode(address) {
@@ -70,12 +70,14 @@ async function resolveRegionCode(address) {
   return config.compliance.defaultRegionCode;
 }
 
-/** Rule row for a region, or the conservative fallback. */
+/** The rule row for a region, or the conservative fallback. */
 async function getRule(regionCode) {
   if (!regionCode) return fallbackRule();
+
   const rule = await ComplianceRule.findOne({
     where: { regionCode: String(regionCode).toUpperCase(), isActive: true },
   });
+
   if (!rule) {
     logger.warn('No compliance rule configured for region %s — applying platform default', regionCode);
     return fallbackRule();
@@ -84,12 +86,13 @@ async function getRule(regionCode) {
 }
 
 /**
- * Evaluates an order against a region's rules.
- * Returns a report rather than throwing, so callers can preview eligibility
- * (for example the cart screen) without triggering an error.
+ * Evaluates an order against a region's rules and returns a report.
+ *
+ * Deliberately does not throw: the cart screen calls this to preview eligibility
+ * and needs every blocking reason at once, not just the first.
  *
  * @param {object} input
- * @param {object} input.address          delivery address (needs state/regionCode)
+ * @param {object} input.address          delivery address (state / regionCode)
  * @param {string|Date} input.dateOfBirth customer date of birth
  * @param {boolean} input.ageVerified     approved age verification on file
  * @param {number} input.totalQuantity    units in the order
@@ -101,11 +104,13 @@ async function evaluateOrder(input) {
   const reference = input.reference || new Date();
   const regionCode = await resolveRegionCode(input.address);
   const rule = await getRule(regionCode);
+  const regionLabel = rule.regionName || regionCode;
 
   const violations = [];
 
-  // --- Age -----------------------------------------------------------------
+  // --- Age ----------------------------------------------------------------
   const age = calculateAge(input.dateOfBirth, reference);
+
   if (age === null) {
     violations.push({
       code: 'DOB_MISSING',
@@ -114,7 +119,7 @@ async function evaluateOrder(input) {
   } else if (age < rule.minimumAge) {
     violations.push({
       code: 'UNDER_AGE',
-      message: `The legal drinking age in ${rule.regionName || regionCode} is ${rule.minimumAge}. This account is ${age}.`,
+      message: `The legal drinking age in ${regionLabel} is ${rule.minimumAge}. This account is ${age}.`,
       minimumAge: rule.minimumAge,
       age,
     });
@@ -127,11 +132,11 @@ async function evaluateOrder(input) {
     });
   }
 
-  // --- Dry day -------------------------------------------------------------
+  // --- Prohibition --------------------------------------------------------
   if (rule.dryDay) {
     violations.push({
       code: 'DRY_DAY',
-      message: `Alcohol sales are currently suspended in ${rule.regionName || regionCode}.`,
+      message: `Alcohol sales are currently suspended in ${regionLabel}.`,
     });
   }
 
@@ -139,24 +144,24 @@ async function evaluateOrder(input) {
   if (Array.isArray(dryDates) && dryDates.includes(toDateOnly(reference))) {
     violations.push({
       code: 'DRY_DATE',
-      message: `${toDateOnly(reference)} is a dry day in ${rule.regionName || regionCode}. Sales are not permitted.`,
+      message: `${toDateOnly(reference)} is a dry day in ${regionLabel}. Sales are not permitted.`,
     });
   }
 
-  // --- Sale window ---------------------------------------------------------
+  // --- Sale window --------------------------------------------------------
   if (!isWithinTimeWindow(rule.alcoholSaleStartTime, rule.alcoholSaleEndTime, reference)) {
     violations.push({
       code: 'OUTSIDE_SALE_WINDOW',
-      message: `Alcohol can only be sold between ${rule.alcoholSaleStartTime} and ${rule.alcoholSaleEndTime} in ${rule.regionName || regionCode}.`,
+      message: `Alcohol can only be sold between ${rule.alcoholSaleStartTime} and ${rule.alcoholSaleEndTime} in ${regionLabel}.`,
       window: { from: rule.alcoholSaleStartTime, to: rule.alcoholSaleEndTime },
     });
   }
 
-  // --- Caps ----------------------------------------------------------------
+  // --- Caps ---------------------------------------------------------------
   if (rule.maxQuantityPerOrder && input.totalQuantity > rule.maxQuantityPerOrder) {
     violations.push({
       code: 'QUANTITY_LIMIT_EXCEEDED',
-      message: `A single order in ${rule.regionName || regionCode} may contain at most ${rule.maxQuantityPerOrder} units. This order has ${input.totalQuantity}.`,
+      message: `A single order in ${regionLabel} may contain at most ${rule.maxQuantityPerOrder} units. This order has ${input.totalQuantity}.`,
       limit: rule.maxQuantityPerOrder,
     });
   }
@@ -164,19 +169,19 @@ async function evaluateOrder(input) {
   if (rule.maxOrderAmount && Number(input.grandTotal) > Number(rule.maxOrderAmount)) {
     violations.push({
       code: 'VALUE_LIMIT_EXCEEDED',
-      message: `A single order in ${rule.regionName || regionCode} may not exceed ${rule.maxOrderAmount}. This order is ${input.grandTotal}.`,
+      message: `A single order in ${regionLabel} may not exceed ${rule.maxOrderAmount}. This order is ${input.grandTotal}.`,
       limit: Number(rule.maxOrderAmount),
     });
   }
 
-  // --- Blocked product types ----------------------------------------------
+  // --- Blocked product types ---------------------------------------------
   const blockedTypes = rule.ruleMetadata?.blockedTypes;
   if (Array.isArray(blockedTypes) && input.productTypes?.length) {
     const blocked = [...new Set(input.productTypes.filter((t) => blockedTypes.includes(t)))];
     if (blocked.length) {
       violations.push({
         code: 'PRODUCT_TYPE_BLOCKED',
-        message: `These product types cannot be sold in ${rule.regionName || regionCode}: ${blocked.join(', ')}.`,
+        message: `These product types cannot be sold in ${regionLabel}: ${blocked.join(', ')}.`,
         blocked,
       });
     }
@@ -198,7 +203,10 @@ async function evaluateOrder(input) {
   };
 }
 
-/** Throws a 403 COMPLIANCE_BLOCKED when the order may not proceed. */
+/**
+ * The checkout gate. Throws 403 COMPLIANCE_BLOCKED with every violation
+ * attached, so the client can render all of them.
+ */
 async function assertOrderCompliant(input) {
   const report = await evaluateOrder(input);
   if (!report.compliant) {
@@ -207,11 +215,35 @@ async function assertOrderCompliant(input) {
   return report;
 }
 
-// ---------------------------------------------------------------------------
-// Rule administration
-// ---------------------------------------------------------------------------
+/**
+ * Serviceability probe for a location, without an order.
+ * Shared because both the public compliance endpoint and the customer's
+ * saved-address check use it.
+ */
+async function checkServiceability(location) {
+  const regionCode = await resolveRegionCode(location);
+  const rule = await getRule(regionCode);
 
-function serialize(rule) {
+  const withinWindow = isWithinTimeWindow(rule.alcoholSaleStartTime, rule.alcoholSaleEndTime);
+  const isDryToday = rule.dryDay
+    || (Array.isArray(rule.ruleMetadata?.dryDates)
+      && rule.ruleMetadata.dryDates.includes(toDateOnly(new Date())));
+
+  return {
+    regionCode: rule.regionCode || regionCode,
+    regionName: rule.regionName || null,
+    serviceable: !isDryToday && withinWindow,
+    minimumAge: rule.minimumAge,
+    dryDay: isDryToday,
+    withinSaleWindow: withinWindow,
+    saleWindow: { from: rule.alcoholSaleStartTime, to: rule.alcoholSaleEndTime },
+    maxOrderAmount: rule.maxOrderAmount === null ? null : Number(rule.maxOrderAmount),
+    maxQuantityPerOrder: rule.maxQuantityPerOrder,
+  };
+}
+
+/** Shared because the compliance and customer controllers both return rules. */
+function serializeRule(rule) {
   return {
     id: rule.id,
     regionCode: rule.regionCode,
@@ -229,125 +261,12 @@ function serialize(rule) {
   };
 }
 
-async function list(body) {
-  const { page, limit, offset, order } = buildPagination(body, {
-    sortable: SORTABLE,
-    defaultSort: 'regionCode',
-    defaultOrder: 'ASC',
-  });
-
-  const where = {};
-  if (body.search) {
-    where[Op.or] = [
-      { regionCode: { [Op.like]: `%${body.search}%` } },
-      { regionName: { [Op.like]: `%${body.search}%` } },
-    ];
-  }
-  if (body.dryDay !== undefined && body.dryDay !== null) where.dryDay = body.dryDay;
-
-  const result = await ComplianceRule.findAndCountAll({ where, limit, offset, order });
-  return { rows: result.rows.map(serialize), meta: toPageMeta(result, { page, limit }) };
-}
-
-async function detail(body) {
-  const rule = body.id
-    ? await ComplianceRule.findByPk(body.id)
-    : await ComplianceRule.findOne({ where: { regionCode: String(body.regionCode).toUpperCase() } });
-  if (!rule) throw AppError.notFound('Compliance rule not found');
-  return serialize(rule);
-}
-
-async function upsert(body, req) {
-  const regionCode = String(body.regionCode).toUpperCase();
-  const existing = await ComplianceRule.findOne({ where: { regionCode }, paranoid: false });
-
-  const values = {
-    regionCode,
-    regionName: body.regionName ?? existing?.regionName ?? null,
-    minimumAge: body.minimumAge ?? existing?.minimumAge ?? config.compliance.defaultMinimumAge,
-    alcoholSaleStartTime: body.alcoholSaleStartTime ?? existing?.alcoholSaleStartTime ?? null,
-    alcoholSaleEndTime: body.alcoholSaleEndTime ?? existing?.alcoholSaleEndTime ?? null,
-    dryDay: body.dryDay ?? existing?.dryDay ?? false,
-    maxOrderAmount: body.maxOrderAmount ?? existing?.maxOrderAmount ?? null,
-    maxQuantityPerOrder: body.maxQuantityPerOrder ?? existing?.maxQuantityPerOrder ?? null,
-    ruleMetadata: body.ruleMetadata ?? existing?.ruleMetadata ?? null,
-    isActive: body.isActive ?? existing?.isActive ?? true,
-  };
-
-  let rule;
-  let before = null;
-
-  if (existing) {
-    before = serialize(existing);
-    if (existing.deletedAt) await existing.restore();
-    rule = await existing.update({ ...values, updatedBy: req.user.id });
-  } else {
-    rule = await ComplianceRule.create({ ...values, createdBy: req.user.id });
-  }
-
-  await recordAudit({
-    action: AUDIT_ACTIONS.COMPLIANCE_RULE_UPDATED,
-    entityType: 'ComplianceRule',
-    entityId: rule.id,
-    oldValues: before,
-    newValues: serialize(rule),
-    req,
-  });
-
-  return serialize(rule);
-}
-
-async function remove(body, req) {
-  const rule = await ComplianceRule.findByPk(body.id);
-  if (!rule) throw AppError.notFound('Compliance rule not found');
-
-  await rule.update({ deletedBy: req.user.id });
-  await rule.destroy();
-
-  await recordAudit({
-    action: AUDIT_ACTIONS.COMPLIANCE_RULE_UPDATED,
-    entityType: 'ComplianceRule',
-    entityId: rule.id,
-    oldValues: { regionCode: rule.regionCode },
-    newValues: { deleted: true },
-    req,
-  });
-
-  return { deleted: true };
-}
-
-/** Public-facing check used by the storefront before it shows a checkout button. */
-async function checkServiceability(body) {
-  const regionCode = await resolveRegionCode(body);
-  const rule = await getRule(regionCode);
-
-  const withinWindow = isWithinTimeWindow(rule.alcoholSaleStartTime, rule.alcoholSaleEndTime);
-  const isDryToday = rule.dryDay
-    || (Array.isArray(rule.ruleMetadata?.dryDates) && rule.ruleMetadata.dryDates.includes(toDateOnly(new Date())));
-
-  return {
-    regionCode: rule.regionCode || regionCode,
-    regionName: rule.regionName || null,
-    serviceable: !isDryToday && withinWindow,
-    minimumAge: rule.minimumAge,
-    dryDay: isDryToday,
-    withinSaleWindow: withinWindow,
-    saleWindow: { from: rule.alcoholSaleStartTime, to: rule.alcoholSaleEndTime },
-    maxOrderAmount: rule.maxOrderAmount === null ? null : Number(rule.maxOrderAmount),
-    maxQuantityPerOrder: rule.maxQuantityPerOrder,
-  };
-}
-
 module.exports = {
+  fallbackRule,
   resolveRegionCode,
   getRule,
   evaluateOrder,
   assertOrderCompliant,
-  list,
-  detail,
-  upsert,
-  remove,
   checkServiceability,
-  serialize,
-  fallbackRule,
+  serializeRule,
 };

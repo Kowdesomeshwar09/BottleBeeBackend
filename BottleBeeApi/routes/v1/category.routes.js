@@ -37,7 +37,12 @@ const router = express.Router();
  *           application/json:
  *             schema: { $ref: '#/components/schemas/PaginatedResponse' }
  */
-router.post('/list', optionalAuthenticate, validate(schemas.listCategoriesSchema), controller.listCategories);
+router.post(
+  '/list',
+  validate(schemas.listCategoriesSchema),
+  optionalAuthenticate,
+  controller.listCategories
+);
 
 /**
  * @openapi
@@ -58,7 +63,7 @@ router.post('/list', optionalAuthenticate, validate(schemas.listCategoriesSchema
  *           application/json:
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  */
-router.post('/tree', optionalAuthenticate, validate(schemas.emptySchema), controller.categoryTree);
+router.post('/tree', validate(schemas.emptySchema), optionalAuthenticate, controller.categoryTree);
 
 /**
  * @openapi
@@ -81,9 +86,8 @@ router.post('/tree', optionalAuthenticate, validate(schemas.emptySchema), contro
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.post('/detail', optionalAuthenticate, validate(schemas.idSchema), controller.getCategory);
+router.post('/detail', validate(schemas.idSchema), optionalAuthenticate, controller.getCategory);
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -119,8 +123,9 @@ router.use(authenticate);
  */
 router.post(
   '/create',
-  authorize(PERMISSIONS.CATEGORY_MANAGE),
   validate(schemas.createCategorySchema),
+  authenticate,
+  authorize(PERMISSIONS.CATEGORY_MANAGE),
   controller.createCategory
 );
 
@@ -157,8 +162,9 @@ router.post(
  */
 router.post(
   '/update',
-  authorize(PERMISSIONS.CATEGORY_MANAGE),
   validate(schemas.updateCategorySchema),
+  authenticate,
+  authorize(PERMISSIONS.CATEGORY_MANAGE),
   controller.updateCategory
 );
 
@@ -187,8 +193,9 @@ router.post(
  */
 router.post(
   '/delete',
-  authorize(PERMISSIONS.CATEGORY_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.CATEGORY_MANAGE),
   controller.deleteCategory
 );
 

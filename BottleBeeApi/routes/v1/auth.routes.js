@@ -169,7 +169,7 @@ router.post('/refresh-token', authLimiter, validate(schemas.refreshTokenSchema),
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       401: { $ref: '#/components/responses/Unauthorized' }
  */
-router.post('/logout', authenticate, validate(schemas.logoutSchema), controller.logout);
+router.post('/logout', validate(schemas.logoutSchema), authenticate, controller.logout);
 
 /**
  * @openapi
@@ -271,8 +271,8 @@ router.post(
  */
 router.post(
   '/change-password',
-  authenticate,
   validate(schemas.changePasswordSchema),
+  authenticate,
   controller.changePassword
 );
 
@@ -297,7 +297,7 @@ router.post(
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       401: { $ref: '#/components/responses/Unauthorized' }
  */
-router.post('/me', authenticate, validate(schemas.emptySchema), controller.me);
+router.post('/me', validate(schemas.emptySchema), authenticate, controller.me);
 
 /**
  * @openapi
@@ -317,6 +317,6 @@ router.post('/me', authenticate, validate(schemas.emptySchema), controller.me);
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       401: { $ref: '#/components/responses/Unauthorized' }
  */
-router.post('/sessions', authenticate, validate(schemas.emptySchema), controller.sessions);
+router.post('/sessions', validate(schemas.emptySchema), authenticate, controller.sessions);
 
 module.exports = router;

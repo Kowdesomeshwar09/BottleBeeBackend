@@ -11,7 +11,6 @@ const schemas = require('../../validators/inventory.validator');
 
 const router = express.Router();
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -45,8 +44,9 @@ router.use(authenticate);
  */
 router.post(
   '/list',
-  authorize(PERMISSIONS.INVENTORY_VIEW),
   validate(schemas.listInventorySchema),
+  authenticate,
+  authorize(PERMISSIONS.INVENTORY_VIEW),
   controller.list
 );
 
@@ -73,8 +73,9 @@ router.post(
  */
 router.post(
   '/detail',
-  authorize(PERMISSIONS.INVENTORY_VIEW),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.INVENTORY_VIEW),
   controller.detail
 );
 
@@ -120,8 +121,9 @@ router.post(
  */
 router.post(
   '/adjust',
-  authorize(PERMISSIONS.INVENTORY_MANAGE),
   validate(schemas.adjustSchema),
+  authenticate,
+  authorize(PERMISSIONS.INVENTORY_MANAGE),
   controller.adjust
 );
 
@@ -164,8 +166,9 @@ router.post(
  */
 router.post(
   '/bulk-adjust',
-  authorize(PERMISSIONS.INVENTORY_MANAGE),
   validate(schemas.bulkAdjustSchema),
+  authenticate,
+  authorize(PERMISSIONS.INVENTORY_MANAGE),
   controller.bulkAdjust
 );
 
@@ -203,8 +206,9 @@ router.post(
  */
 router.post(
   '/transactions',
-  authorize(PERMISSIONS.INVENTORY_VIEW),
   validate(schemas.transactionsSchema),
+  authenticate,
+  authorize(PERMISSIONS.INVENTORY_VIEW),
   controller.transactions
 );
 
@@ -234,8 +238,9 @@ router.post(
  */
 router.post(
   '/low-stock',
-  authorize(PERMISSIONS.INVENTORY_VIEW),
   validate(schemas.vendorScopeSchema),
+  authenticate,
+  authorize(PERMISSIONS.INVENTORY_VIEW),
   controller.lowStock
 );
 
@@ -263,8 +268,9 @@ router.post(
  */
 router.post(
   '/summary',
-  authorize(PERMISSIONS.INVENTORY_VIEW),
   validate(schemas.vendorScopeSchema),
+  authenticate,
+  authorize(PERMISSIONS.INVENTORY_VIEW),
   controller.summary
 );
 

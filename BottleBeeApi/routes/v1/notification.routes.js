@@ -11,7 +11,6 @@ const schemas = require('../../validators/notification.validator');
 
 const router = express.Router();
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -41,8 +40,9 @@ router.use(authenticate);
  */
 router.post(
   '/list',
-  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   validate(schemas.listNotificationsSchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   controller.list
 );
 
@@ -66,8 +66,9 @@ router.post(
  */
 router.post(
   '/unread-count',
-  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   controller.unreadCount
 );
 
@@ -93,8 +94,9 @@ router.post(
  */
 router.post(
   '/mark-read',
-  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   controller.markRead
 );
 
@@ -118,8 +120,9 @@ router.post(
  */
 router.post(
   '/mark-all-read',
-  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_VIEW),
   controller.markAllRead
 );
 
@@ -169,8 +172,9 @@ router.post(
  */
 router.post(
   '/send',
-  authorize(PERMISSIONS.NOTIFICATION_SEND),
   validate(schemas.sendSystemSchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_SEND),
   controller.sendSystem
 );
 
@@ -200,8 +204,9 @@ router.post(
  */
 router.post(
   '/templates/list',
-  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   validate(schemas.listTemplatesSchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   controller.listTemplates
 );
 
@@ -240,8 +245,9 @@ router.post(
  */
 router.post(
   '/templates/save',
-  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   validate(schemas.saveTemplateSchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   controller.saveTemplate
 );
 
@@ -274,8 +280,9 @@ router.post(
  */
 router.post(
   '/templates/preview',
-  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   validate(schemas.previewTemplateSchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   controller.previewTemplate
 );
 
@@ -304,8 +311,9 @@ router.post(
  */
 router.post(
   '/templates/delete',
-  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.NOTIFICATION_TEMPLATE_MANAGE),
   controller.deleteTemplate
 );
 

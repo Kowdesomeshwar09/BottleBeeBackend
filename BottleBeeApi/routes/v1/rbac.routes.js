@@ -11,7 +11,6 @@ const schemas = require('../../validators/rbac.validator');
 
 const router = express.Router();
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -32,7 +31,13 @@ router.use(authenticate);
  *             schema: { $ref: '#/components/schemas/PaginatedResponse' }
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
-router.post('/roles/list', authorize(PERMISSIONS.ROLE_VIEW), validate(schemas.listRolesSchema), controller.listRoles);
+router.post(
+  '/roles/list',
+  validate(schemas.listRolesSchema),
+  authenticate,
+  authorize(PERMISSIONS.ROLE_VIEW),
+  controller.listRoles
+);
 
 /**
  * @openapi
@@ -54,7 +59,13 @@ router.post('/roles/list', authorize(PERMISSIONS.ROLE_VIEW), validate(schemas.li
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.post('/roles/detail', authorize(PERMISSIONS.ROLE_VIEW), validate(schemas.idSchema), controller.getRole);
+router.post(
+  '/roles/detail',
+  validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.ROLE_VIEW),
+  controller.getRole
+);
 
 /**
  * @openapi
@@ -89,8 +100,9 @@ router.post('/roles/detail', authorize(PERMISSIONS.ROLE_VIEW), validate(schemas.
  */
 router.post(
   '/roles/create',
-  authorize(PERMISSIONS.ROLE_MANAGE),
   validate(schemas.createRoleSchema),
+  authenticate,
+  authorize(PERMISSIONS.ROLE_MANAGE),
   controller.createRole
 );
 
@@ -124,8 +136,9 @@ router.post(
  */
 router.post(
   '/roles/update',
-  authorize(PERMISSIONS.ROLE_MANAGE),
   validate(schemas.updateRoleSchema),
+  authenticate,
+  authorize(PERMISSIONS.ROLE_MANAGE),
   controller.updateRole
 );
 
@@ -152,7 +165,13 @@ router.post(
  *       403: { $ref: '#/components/responses/Forbidden' }
  *       409: { $ref: '#/components/responses/Conflict' }
  */
-router.post('/roles/delete', authorize(PERMISSIONS.ROLE_MANAGE), validate(schemas.idSchema), controller.deleteRole);
+router.post(
+  '/roles/delete',
+  validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.ROLE_MANAGE),
+  controller.deleteRole
+);
 
 /**
  * @openapi
@@ -180,8 +199,9 @@ router.post('/roles/delete', authorize(PERMISSIONS.ROLE_MANAGE), validate(schema
  */
 router.post(
   '/permissions/list',
-  authorize(PERMISSIONS.PERMISSION_VIEW),
   validate(schemas.listPermissionsSchema),
+  authenticate,
+  authorize(PERMISSIONS.PERMISSION_VIEW),
   controller.listPermissions
 );
 
@@ -206,8 +226,9 @@ router.post(
  */
 router.post(
   '/permissions/matrix',
-  authorize(PERMISSIONS.PERMISSION_VIEW),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.PERMISSION_VIEW),
   controller.permissionMatrix
 );
 
@@ -243,8 +264,9 @@ router.post(
  */
 router.post(
   '/roles/set-permissions',
-  authorize(PERMISSIONS.PERMISSION_MANAGE),
   validate(schemas.setRolePermissionsSchema),
+  authenticate,
+  authorize(PERMISSIONS.PERMISSION_MANAGE),
   controller.setRolePermissions
 );
 
@@ -282,8 +304,9 @@ router.post(
  */
 router.post(
   '/users/assign-roles',
-  authorize(PERMISSIONS.ROLE_MANAGE),
   validate(schemas.assignRolesSchema),
+  authenticate,
+  authorize(PERMISSIONS.ROLE_MANAGE),
   controller.assignRoles
 );
 

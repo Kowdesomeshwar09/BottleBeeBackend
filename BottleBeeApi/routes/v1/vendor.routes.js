@@ -12,7 +12,6 @@ const schemas = require('../../validators/vendor.validator');
 
 const router = express.Router();
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -60,7 +59,13 @@ router.use(authenticate);
  *       409: { $ref: '#/components/responses/Conflict' }
  *       422: { $ref: '#/components/responses/ValidationError' }
  */
-router.post('/apply', authorize(PERMISSIONS.VENDOR_APPLY), validate(schemas.applySchema), controller.apply);
+router.post(
+  '/apply',
+  validate(schemas.applySchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_APPLY),
+  controller.apply
+);
 
 /**
  * @openapi
@@ -82,8 +87,9 @@ router.post('/apply', authorize(PERMISSIONS.VENDOR_APPLY), validate(schemas.appl
  */
 router.post(
   '/my-stores',
-  authorize(PERMISSIONS.VENDOR_VIEW),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_VIEW),
   controller.myVendors
 );
 
@@ -113,7 +119,13 @@ router.post(
  *           application/json:
  *             schema: { $ref: '#/components/schemas/PaginatedResponse' }
  */
-router.post('/list', authorize(PERMISSIONS.VENDOR_VIEW), validate(schemas.listVendorsSchema), controller.list);
+router.post(
+  '/list',
+  validate(schemas.listVendorsSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_VIEW),
+  controller.list
+);
 
 /**
  * @openapi
@@ -136,7 +148,13 @@ router.post('/list', authorize(PERMISSIONS.VENDOR_VIEW), validate(schemas.listVe
  *       403: { $ref: '#/components/responses/Forbidden' }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.post('/detail', authorize(PERMISSIONS.VENDOR_VIEW), validate(schemas.idSchema), controller.detail);
+router.post(
+  '/detail',
+  validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_VIEW),
+  controller.detail
+);
 
 /**
  * @openapi
@@ -172,7 +190,13 @@ router.post('/detail', authorize(PERMISSIONS.VENDOR_VIEW), validate(schemas.idSc
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
-router.post('/update', authorize(PERMISSIONS.VENDOR_MANAGE), validate(schemas.updateSchema), controller.update);
+router.post(
+  '/update',
+  validate(schemas.updateSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_MANAGE),
+  controller.update
+);
 
 /**
  * @openapi
@@ -206,7 +230,13 @@ router.post('/update', authorize(PERMISSIONS.VENDOR_MANAGE), validate(schemas.up
  *       403: { $ref: '#/components/responses/Forbidden' }
  *       409: { $ref: '#/components/responses/Conflict' }
  */
-router.post('/review', authorize(PERMISSIONS.VENDOR_APPROVE), validate(schemas.reviewSchema), controller.review);
+router.post(
+  '/review',
+  validate(schemas.reviewSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_APPROVE),
+  controller.review
+);
 
 /**
  * @openapi
@@ -246,9 +276,10 @@ router.post('/review', authorize(PERMISSIONS.VENDOR_APPROVE), validate(schemas.r
  */
 router.post(
   '/licenses/add',
-  authorize(PERMISSIONS.VENDOR_LICENSE_MANAGE),
   documentUpload.fields([{ name: 'document', maxCount: 1 }]),
   validate(schemas.addLicenseSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_LICENSE_MANAGE),
   controller.addLicense
 );
 
@@ -282,8 +313,9 @@ router.post(
  */
 router.post(
   '/licenses/list',
-  authorize(PERMISSIONS.VENDOR_VIEW),
   validate(schemas.listLicensesSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_VIEW),
   controller.listLicenses
 );
 
@@ -316,8 +348,9 @@ router.post(
  */
 router.post(
   '/licenses/review',
-  authorize(PERMISSIONS.VENDOR_LICENSE_REVIEW),
   validate(schemas.reviewLicenseSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_LICENSE_REVIEW),
   controller.reviewLicense
 );
 
@@ -359,8 +392,9 @@ router.post(
  */
 router.post(
   '/addresses/save',
-  authorize(PERMISSIONS.VENDOR_MANAGE),
   validate(schemas.saveAddressSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_MANAGE),
   controller.saveAddress
 );
 
@@ -387,8 +421,9 @@ router.post(
  */
 router.post(
   '/addresses/list',
-  authorize(PERMISSIONS.VENDOR_VIEW),
   validate(schemas.vendorScopeSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_VIEW),
   controller.listAddresses
 );
 
@@ -426,8 +461,9 @@ router.post(
  */
 router.post(
   '/staff/add',
-  authorize(PERMISSIONS.VENDOR_STAFF_MANAGE),
   validate(schemas.addStaffSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_STAFF_MANAGE),
   controller.addStaff
 );
 
@@ -454,8 +490,9 @@ router.post(
  */
 router.post(
   '/staff/list',
-  authorize(PERMISSIONS.VENDOR_VIEW),
   validate(schemas.vendorScopeSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_VIEW),
   controller.listStaff
 );
 
@@ -482,8 +519,9 @@ router.post(
  */
 router.post(
   '/staff/remove',
-  authorize(PERMISSIONS.VENDOR_STAFF_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.VENDOR_STAFF_MANAGE),
   controller.removeStaff
 );
 

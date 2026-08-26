@@ -12,7 +12,6 @@ const schemas = require('../../validators/ageVerification.validator');
 
 const router = express.Router();
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -58,13 +57,14 @@ router.use(authenticate);
  */
 router.post(
   '/submit',
-  authorize(PERMISSIONS.AGE_VERIFICATION_SUBMIT),
   documentUpload.fields([
     { name: 'documentFront', maxCount: 1 },
     { name: 'documentBack', maxCount: 1 },
     { name: 'selfie', maxCount: 1 },
   ]),
   validate(schemas.submitSchema),
+  authenticate,
+  authorize(PERMISSIONS.AGE_VERIFICATION_SUBMIT),
   controller.submit
 );
 
@@ -88,8 +88,9 @@ router.post(
  */
 router.post(
   '/my-status',
-  authorize(PERMISSIONS.AGE_VERIFICATION_SUBMIT),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.AGE_VERIFICATION_SUBMIT),
   controller.myStatus
 );
 
@@ -116,8 +117,9 @@ router.post(
  */
 router.post(
   '/eligibility',
-  authorize(PERMISSIONS.AGE_VERIFICATION_SUBMIT),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.AGE_VERIFICATION_SUBMIT),
   controller.eligibility
 );
 
@@ -148,8 +150,9 @@ router.post(
  */
 router.post(
   '/list',
-  authorize(PERMISSIONS.AGE_VERIFICATION_VIEW),
   validate(schemas.listSchema),
+  authenticate,
+  authorize(PERMISSIONS.AGE_VERIFICATION_VIEW),
   controller.list
 );
 
@@ -176,8 +179,9 @@ router.post(
  */
 router.post(
   '/detail',
-  authorize(PERMISSIONS.AGE_VERIFICATION_VIEW),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.AGE_VERIFICATION_VIEW),
   controller.detail
 );
 
@@ -215,8 +219,9 @@ router.post(
  */
 router.post(
   '/review',
-  authorize(PERMISSIONS.AGE_VERIFICATION_REVIEW),
   validate(schemas.reviewSchema),
+  authenticate,
+  authorize(PERMISSIONS.AGE_VERIFICATION_REVIEW),
   controller.review
 );
 
@@ -245,8 +250,9 @@ router.post(
  */
 router.post(
   '/expire-lapsed',
-  authorize(PERMISSIONS.AGE_VERIFICATION_REVIEW),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.AGE_VERIFICATION_REVIEW),
   controller.expireLapsed
 );
 

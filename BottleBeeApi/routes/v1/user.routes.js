@@ -12,7 +12,6 @@ const schemas = require('../../validators/user.validator');
 const router = express.Router();
 
 // Every route in this module requires a signed-in user.
-router.use(authenticate);
 
 /**
  * @openapi
@@ -41,7 +40,13 @@ router.use(authenticate);
  *       401: { $ref: '#/components/responses/Unauthorized' }
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
-router.post('/list', authorize(PERMISSIONS.USER_VIEW), validate(schemas.listUsersSchema), controller.list);
+router.post(
+  '/list',
+  validate(schemas.listUsersSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_VIEW),
+  controller.list
+);
 
 /**
  * @openapi
@@ -64,7 +69,13 @@ router.post('/list', authorize(PERMISSIONS.USER_VIEW), validate(schemas.listUser
  *       403: { $ref: '#/components/responses/Forbidden' }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.post('/detail', authorize(PERMISSIONS.USER_VIEW), validate(schemas.idSchema), controller.detail);
+router.post(
+  '/detail',
+  validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_VIEW),
+  controller.detail
+);
 
 /**
  * @openapi
@@ -106,7 +117,13 @@ router.post('/detail', authorize(PERMISSIONS.USER_VIEW), validate(schemas.idSche
  *       409: { $ref: '#/components/responses/Conflict' }
  *       422: { $ref: '#/components/responses/ValidationError' }
  */
-router.post('/create', authorize(PERMISSIONS.USER_CREATE), validate(schemas.createUserSchema), controller.create);
+router.post(
+  '/create',
+  validate(schemas.createUserSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_CREATE),
+  controller.create
+);
 
 /**
  * @openapi
@@ -139,7 +156,13 @@ router.post('/create', authorize(PERMISSIONS.USER_CREATE), validate(schemas.crea
  *       403: { $ref: '#/components/responses/Forbidden' }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.post('/update', authorize(PERMISSIONS.USER_UPDATE), validate(schemas.updateUserSchema), controller.update);
+router.post(
+  '/update',
+  validate(schemas.updateUserSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_UPDATE),
+  controller.update
+);
 
 /**
  * @openapi
@@ -173,8 +196,9 @@ router.post('/update', authorize(PERMISSIONS.USER_UPDATE), validate(schemas.upda
  */
 router.post(
   '/change-status',
-  authorize(PERMISSIONS.USER_UPDATE),
   validate(schemas.changeStatusSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_UPDATE),
   controller.changeStatus
 );
 
@@ -206,7 +230,13 @@ router.post(
  *       403: { $ref: '#/components/responses/Forbidden' }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.post('/delete', authorize(PERMISSIONS.USER_DELETE), validate(schemas.deleteUserSchema), controller.remove);
+router.post(
+  '/delete',
+  validate(schemas.deleteUserSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_DELETE),
+  controller.remove
+);
 
 /**
  * @openapi
@@ -235,8 +265,9 @@ router.post('/delete', authorize(PERMISSIONS.USER_DELETE), validate(schemas.dele
  */
 router.post(
   '/reset-password',
-  authorize(PERMISSIONS.USER_UPDATE),
   validate(schemas.resetUserPasswordSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_UPDATE),
   controller.resetPassword
 );
 
@@ -260,6 +291,12 @@ router.post(
  *             schema: { $ref: '#/components/schemas/SuccessResponse' }
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
-router.post('/unlock', authorize(PERMISSIONS.USER_UPDATE), validate(schemas.idSchema), controller.unlock);
+router.post(
+  '/unlock',
+  validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.USER_UPDATE),
+  controller.unlock
+);
 
 module.exports = router;

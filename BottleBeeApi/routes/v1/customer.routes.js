@@ -11,7 +11,6 @@ const schemas = require('../../validators/customer.validator');
 
 const router = express.Router();
 
-router.use(authenticate);
 
 /**
  * @openapi
@@ -47,8 +46,9 @@ router.use(authenticate);
  */
 router.post(
   '/profile/save',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.saveProfileSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.saveProfile
 );
 
@@ -73,8 +73,9 @@ router.post(
  */
 router.post(
   '/profile/detail',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.getProfile
 );
 
@@ -98,8 +99,9 @@ router.post(
  */
 router.post(
   '/profile/order-summary',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.emptySchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.orderSummary
 );
 
@@ -123,8 +125,9 @@ router.post(
  */
 router.post(
   '/addresses/list',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.listAddressesSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.listAddresses
 );
 
@@ -170,8 +173,9 @@ router.post(
  */
 router.post(
   '/addresses/create',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.createAddressSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.createAddress
 );
 
@@ -209,8 +213,9 @@ router.post(
  */
 router.post(
   '/addresses/update',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.updateAddressSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.updateAddress
 );
 
@@ -236,8 +241,9 @@ router.post(
  */
 router.post(
   '/addresses/set-default',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.setDefaultAddress
 );
 
@@ -266,8 +272,9 @@ router.post(
  */
 router.post(
   '/addresses/delete',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.deleteAddress
 );
 
@@ -296,8 +303,9 @@ router.post(
  */
 router.post(
   '/addresses/check-serviceability',
-  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_MANAGE),
   controller.checkServiceability
 );
 
@@ -327,8 +335,9 @@ router.post(
  */
 router.post(
   '/admin/list',
-  authorize(PERMISSIONS.CUSTOMER_VIEW),
   validate(schemas.adminListCustomersSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_VIEW),
   controller.adminList
 );
 
@@ -355,8 +364,9 @@ router.post(
  */
 router.post(
   '/admin/detail',
-  authorize(PERMISSIONS.CUSTOMER_VIEW),
   validate(schemas.idSchema),
+  authenticate,
+  authorize(PERMISSIONS.CUSTOMER_VIEW),
   controller.adminDetail
 );
 
