@@ -1,0 +1,46 @@
+# ---------------------------------------------------------------------------
+# Bottle Bee — Cheers Delivered Fast.
+# ---------------------------------------------------------------------------
+
+# Dependencies
+node_modules/
+
+# Environment: never commit real credentials. Only the template is tracked.
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Uploaded content — KYC documents, vendor licences, product images.
+# These are customer identity documents; they must never reach the repository.
+uploads/
+!uploads/**/.gitkeep
+
+# Build output
+dist/
+build/
+out-tsc/
+.angular/
+
+# Test output
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

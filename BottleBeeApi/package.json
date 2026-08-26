@@ -1,0 +1,58 @@
+{
+  "name": "bottlebee-api",
+  "version": "1.0.0",
+  "description": "Bottle Bee — Cheers Delivered Fast. Backend API for the Bottle Bee alcohol delivery platform.",
+  "main": "server.js",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:create": "sequelize-cli db:create",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo",
+    "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all",
+    "db:seed": "sequelize-cli db:seed:all",
+    "db:seed:undo": "sequelize-cli db:seed:undo:all",
+    "db:reset": "npm run db:migrate:undo:all && npm run db:migrate && npm run db:seed",
+    "db:setup": "npm run db:create && npm run db:migrate && npm run db:seed",
+    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "test:unit": "cross-env NODE_ENV=test jest tests/unit --runInBand",
+    "test:integration": "cross-env NODE_ENV=test jest tests/integration --runInBand",
+    "test:watch": "cross-env NODE_ENV=test jest --runInBand --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.2.0",
+    "mysql2": "^3.11.5",
+    "razorpay": "^2.9.5",
+    "sequelize": "^6.37.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.0.3",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "sequelize-cli": "^6.6.2",
+    "supertest": "^7.0.0"
+  }
+}
