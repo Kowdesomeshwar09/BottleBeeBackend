@@ -15,7 +15,21 @@ const id = Joi.number().integer().positive();
 
 const requiredId = (label = 'id') => id.required().label(label);
 
-const email = Joi.string().trim().lowercase().email({ minDomainSegments: 2 }).max(255);
+/**
+ * Email shape only — `local@domain.tld` with at least two domain segments.
+ *
+ * TLD-registry validation is deliberately off. Joi's bundled IANA list goes
+ * stale, so leaving it on rejects customers on newer TLDs and refuses the
+ * RFC 2606 reserved domains (`.test`, `.example`) that fixtures and internal
+ * tooling legitimately use. A wrong-but-well-formed address fails at delivery,
+ * which is recoverable; a valid address refused at registration is a lost
+ * customer.
+ */
+const email = Joi.string()
+  .trim()
+  .lowercase()
+  .email({ minDomainSegments: 2, tlds: { allow: false } })
+  .max(255);
 
 /** E.164, with or without the leading +. Indian numbers are the common case. */
 const phone = Joi.string()

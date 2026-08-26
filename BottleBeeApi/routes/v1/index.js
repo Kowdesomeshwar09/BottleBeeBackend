@@ -32,10 +32,15 @@ router.use('/products', require('./product.routes'));
 router.use('/catalog', require('./publicCatalog.routes'));
 router.use('/inventory', require('./inventory.routes'));
 
+// --- Purchase ---------------------------------------------------------------
+router.use('/cart', require('./cart.routes'));
+router.use('/orders', require('./order.routes'));
+router.use('/coupons', require('./coupon.routes'));
+router.use('/promotions', require('./promotion.routes'));
+
 // --- Notifications ----------------------------------------------------------
 router.use('/notifications', require('./notification.routes'));
 
-// TODO: mount as each module lands — cart, orders, payments, delivery,
-// coupons, promotions, reviews, admin.
+// TODO: mount as each module lands — payments, delivery, reviews, admin.
 
 module.exports = router;
