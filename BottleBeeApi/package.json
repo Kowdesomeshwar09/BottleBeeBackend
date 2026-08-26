@@ -23,7 +23,9 @@
     "test:integration": "cross-env NODE_ENV=test jest tests/integration --runInBand",
     "test:watch": "cross-env NODE_ENV=test jest --runInBand --watch",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test:db:setup": "cross-env NODE_ENV=test sequelize-cli db:create && cross-env NODE_ENV=test sequelize-cli db:migrate && cross-env NODE_ENV=test sequelize-cli db:seed:all",
+    "test:db:reset": "cross-env NODE_ENV=test sequelize-cli db:drop && npm run test:db:setup"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
