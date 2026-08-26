@@ -26,7 +26,7 @@ const pricingService = require('./pricing.service');
 const promotionService = require('./promotion.service');
 const inventoryService = require('./inventory.service');
 const complianceService = require('./compliance.service');
-const vendorService = require('./vendor.service');
+const vendorAccessService = require('./vendorAccess.service');
 const notificationService = require('./notification.service');
 
 /**
@@ -146,7 +146,7 @@ async function scopeOrders(where, req, body = {}) {
   }
 
   if (req.user.roles.includes(ROLES.VENDOR_OWNER) || req.user.roles.includes(ROLES.VENDOR_MANAGER)) {
-    const ids = await vendorService.myVendorIds(req);
+    const ids = await vendorAccessService.myVendorIds(req);
     if (!ids.length) return false;
     where.vendorId = body.vendorId && ids.includes(Number(body.vendorId))
       ? body.vendorId
@@ -385,7 +385,7 @@ async function runCheckout(body, req) {
     });
 
     // --- 9. Vendor licence for this region ------------------------------
-    await vendorService.assertOperational(vendorId, complianceReport.regionCode, { transaction });
+    await vendorAccessService.assertOperational(vendorId, complianceReport.regionCode, { transaction });
 
     // --- 10. Order -------------------------------------------------------
     const paymentMethod = body.paymentMethod || PAYMENT_PROVIDER.RAZORPAY;
@@ -713,7 +713,7 @@ async function updateStatus(body, req) {
 
     // A vendor user may only drive their own store's orders.
     if (req.user.roles.includes(ROLES.VENDOR_OWNER) || req.user.roles.includes(ROLES.VENDOR_MANAGER)) {
-      await vendorService.assertVendorAccess(order.vendorId, req, {
+      await vendorAccessService.assertVendorAccess(order.vendorId, req, {
         requireRoles: [VENDOR_ROLE.OWNER, VENDOR_ROLE.MANAGER],
       });
     }

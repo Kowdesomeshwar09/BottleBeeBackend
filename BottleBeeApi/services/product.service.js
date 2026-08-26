@@ -15,7 +15,7 @@ const { buildPagination, toPageMeta } = require('../utils/pagination');
 const { uniqueSlug } = require('../utils/slug');
 const { recordAudit } = require('../utils/audit');
 const { toDateOnly } = require('../utils/dates');
-const vendorService = require('./vendor.service');
+const vendorAccessService = require('./vendorAccess.service');
 const notificationService = require('./notification.service');
 
 /**
@@ -122,7 +122,7 @@ function serialize(product, extra = {}) {
 
 /** Confirms the caller may write to this product's vendor. */
 async function assertProductAccess(product, req) {
-  await vendorService.assertVendorAccess(product.vendorId, req, {
+  await vendorAccessService.assertVendorAccess(product.vendorId, req, {
     requireRoles: [VENDOR_ROLE.OWNER, VENDOR_ROLE.MANAGER],
   });
 }
@@ -132,8 +132,8 @@ async function assertProductAccess(product, req) {
 // ---------------------------------------------------------------------------
 
 async function create(body, req) {
-  const vendorId = await vendorService.resolveVendorId(body, req);
-  await vendorService.assertVendorAccess(vendorId, req, {
+  const vendorId = await vendorAccessService.resolveVendorId(body, req);
+  await vendorAccessService.assertVendorAccess(vendorId, req, {
     requireRoles: [VENDOR_ROLE.OWNER, VENDOR_ROLE.MANAGER],
   });
 
@@ -328,10 +328,10 @@ async function list(body, req) {
     || req.user.roles.includes(ROLES.SUPPORT_AGENT);
 
   if (body.vendorId) {
-    await vendorService.assertVendorAccess(body.vendorId, req);
+    await vendorAccessService.assertVendorAccess(body.vendorId, req);
     where.vendorId = body.vendorId;
   } else if (!isStaff) {
-    const ids = await vendorService.myVendorIds(req);
+    const ids = await vendorAccessService.myVendorIds(req);
     if (!ids.length) return { rows: [], meta: { page, limit, total: 0 } };
     where.vendorId = { [Op.in]: ids };
   }
@@ -382,7 +382,7 @@ async function detail(body, req) {
 
   // A non-public product may only be read by its vendor or by staff.
   if (product.status !== PRODUCT_STATUS.ACTIVE) {
-    await vendorService.assertVendorAccess(product.vendorId, req);
+    await vendorAccessService.assertVendorAccess(product.vendorId, req);
   }
 
   return serialize(product);

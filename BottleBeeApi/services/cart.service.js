@@ -15,7 +15,7 @@ const pricingService = require('./pricing.service');
 const promotionService = require('./promotion.service');
 const inventoryService = require('./inventory.service');
 const complianceService = require('./compliance.service');
-const vendorService = require('./vendor.service');
+const vendorAccessService = require('./vendorAccess.service');
 
 /**
  * The shopping cart.
@@ -586,7 +586,7 @@ async function validateForCheckout(body, req) {
 
       if (vendor) {
         try {
-          await vendorService.assertOperational(vendor.id, complianceReport.regionCode);
+          await vendorAccessService.assertOperational(vendor.id, complianceReport.regionCode);
         } catch (err) {
           blockers.push({
             code: err.errors?.[0]?.code || 'VENDOR_NOT_OPERATIONAL',
