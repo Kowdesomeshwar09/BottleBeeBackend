@@ -37,10 +37,11 @@ router.use('/cart', require('./cart.routes'));
 router.use('/orders', require('./order.routes'));
 router.use('/coupons', require('./coupon.routes'));
 router.use('/promotions', require('./promotion.routes'));
+router.use('/payments', require('./payment.routes'));
 
 // --- Notifications ----------------------------------------------------------
 router.use('/notifications', require('./notification.routes'));
 
-// TODO: mount as each module lands — payments, delivery, reviews, admin.
+// TODO: mount as each module lands — delivery, reviews, admin.
 
 module.exports = router;
