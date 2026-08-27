@@ -48,3 +48,6 @@ desktop.ini
 # The frontend is its own repository (see BottleBeeUi/.git).
 # Ignored here so it is never accidentally committed into the backend repo.
 BottleBeeUi/
+
+# Local editor/tooling config (launch profiles, agent settings).
+.claude/
