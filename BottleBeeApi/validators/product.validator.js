@@ -95,6 +95,21 @@ const updateVariantSchema = Joi.object({
   isActive: Joi.boolean(),
 }).min(2);
 
+/**
+ * Backfill scope. Every field narrows what is touched; with none, it walks the
+ * caller's whole catalogue up to `limit`.
+ */
+const backfillImagesSchema = Joi.object({
+  id,
+  vendorId: id,
+  productType: enumOf(PRODUCT_TYPE, 'productType'),
+  status: enumOf(PRODUCT_STATUS, 'status'),
+  limit: Joi.number().integer().min(1).max(200).default(50),
+  // Off by default: a store that photographed its own stock has supplied
+  // something better than a category image, and a backfill must not trample it.
+  replaceExisting: Joi.boolean().default(false),
+});
+
 const addImagesSchema = Joi.object({
   productId: requiredId('productId'),
   altText: Joi.string().trim().max(255).allow('', null),
@@ -143,6 +158,7 @@ module.exports = {
   createVariantSchema,
   updateVariantSchema,
   addImagesSchema,
+  backfillImagesSchema,
   publicListSchema,
   publicDetailSchema,
   idSchema,

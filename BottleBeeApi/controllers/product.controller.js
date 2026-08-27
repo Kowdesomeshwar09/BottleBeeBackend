@@ -16,6 +16,7 @@ const { uniqueSlug } = require('../utils/slug');
 const { recordAudit } = require('../utils/audit');
 const { toDateOnly } = require('../utils/dates');
 const { publicUrl } = require('../middlewares/upload');
+const beverageImages = require('../utils/beverageImages');
 const {
   ok, created, paginated, updated, deleted, fail,
 } = require('../utils/response');
@@ -894,6 +895,144 @@ const publicList = async (req, res) => {
 };
 
 /* -------------------------------------------------------------------------- */
+/*                          CATEGORY IMAGE BACKFILL                           */
+/* -------------------------------------------------------------------------- */
+/**
+ * Attaches a category image to products that have none.
+ *
+ * A listing with no picture is a listing customers scroll past, and a catalogue
+ * seeded from a script starts with none at all. This fetches an image of the
+ * right *category* from a free public source and labels it as exactly that —
+ * see `utils/beverageImages.js` for why a brand-photograph lookup was rejected
+ * rather than shipped.
+ *
+ * Never overwrites an existing image. A store that has photographed its own
+ * stock has supplied something better than this can, and a backfill must not
+ * trample it.
+ */
+const backfillCategoryImages = async (req, res) => {
+  try {
+    const where = { isActive: true };
+
+    if (req.body.id) where.id = req.body.id;
+    if (req.body.productType) where.productType = req.body.productType;
+    if (req.body.status) where.status = req.body.status;
+
+    // Vendor users only ever touch their own catalogue; staff may touch any.
+    if (!vendorAccessService.isStaff(req)) {
+      const vendorIds = await vendorAccessService.myVendorIds(req);
+      if (!vendorIds.length) return fail(res, 'No store is associated with this account', 403);
+      where.vendorId = { [Op.in]: vendorIds };
+    } else if (req.body.vendorId) {
+      where.vendorId = req.body.vendorId;
+    }
+
+    const limit = Math.min(Number(req.body.limit) || 50, 200);
+    const replaceExisting = req.body.replaceExisting === true;
+
+    const products = await Product.findAll({
+      where,
+      include: [{ model: ProductImage, as: 'images', required: false, attributes: ['id'] }],
+      limit,
+      order: [['id', 'ASC']],
+    });
+
+    const summary = { considered: products.length, attached: 0, skipped: 0, failed: 0 };
+    const details = [];
+
+    for (const product of products) {
+      const hasImages = (product.images || []).length > 0;
+
+      if (hasImages && !replaceExisting) {
+        summary.skipped += 1;
+        details.push({ id: product.id, name: product.name, outcome: 'SKIPPED_HAS_IMAGE' });
+        continue;
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      const image = await beverageImages.fetchCategoryImage(product.productType, {
+        productName: product.name,
+      });
+
+      if (!image) {
+        summary.failed += 1;
+        details.push({ id: product.id, name: product.name, outcome: 'NO_IMAGE_AVAILABLE' });
+        continue;
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await sequelize.transaction(async (transaction) => {
+        const existingCount = await ProductImage.count({
+          where: { productId: product.id },
+          transaction,
+        });
+
+        // Only claim primary when nothing else holds it.
+        if (existingCount === 0) {
+          await ProductImage.create(
+            {
+              productId: product.id,
+              imageUrl: image.publicPath,
+              altText: image.altText,
+              sortOrder: 0,
+              isPrimary: true,
+              createdBy: req.user.id,
+            },
+            { transaction }
+          );
+        } else {
+          await ProductImage.create(
+            {
+              productId: product.id,
+              imageUrl: image.publicPath,
+              altText: image.altText,
+              sortOrder: existingCount,
+              isPrimary: false,
+              createdBy: req.user.id,
+            },
+            { transaction }
+          );
+        }
+      });
+
+      summary.attached += 1;
+      details.push({
+        id: product.id,
+        name: product.name,
+        productType: product.productType,
+        outcome: 'ATTACHED',
+        imageUrl: image.publicPath,
+        matchedName: image.matchedName,
+      });
+    }
+
+    await recordAudit({
+      req,
+      action: AUDIT_ACTIONS.UPDATE,
+      entityType: 'Product',
+      entityId: req.body.id || null,
+      metadata: { operation: 'BACKFILL_CATEGORY_IMAGES', ...summary },
+    });
+
+    return ok(
+      res,
+      {
+        ...summary,
+        source: beverageImages.SOURCE,
+        note: 'Category images are representative of the product type, not photographs '
+          + 'of the product. A store should replace them with its own photographs via '
+          + 'products/images/add.',
+        details,
+      },
+      `Attached ${summary.attached} image(s), skipped ${summary.skipped}, failed ${summary.failed}`
+    );
+  } catch (error) {
+    if (error.statusCode) return fail(res, error.message, error.statusCode, error.errors);
+    return fail(res, 'Error backfilling product images', 500, [{ message: error.message }]);
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 /*                      PUBLIC PRODUCT DETAIL + REVIEWS                       */
 /* -------------------------------------------------------------------------- */
 const publicDetail = async (req, res) => {
@@ -1063,6 +1202,7 @@ module.exports = {
   updateVariant,
   deleteVariant,
   addImages,
+  backfillCategoryImages,
   setPrimaryImage,
   deleteImage,
   publicList,

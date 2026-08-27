@@ -447,6 +447,58 @@ router.post(
 
 /**
  * @openapi
+ * /api/v1/products/images/backfill-category:
+ *   post:
+ *     tags: [Catalog]
+ *     summary: Attach category images to products that have none
+ *     description: |
+ *       Requires permission: `PRODUCT_MANAGE`. Vendor users are scoped to their
+ *       own catalogue; staff may pass `vendorId` to target one store.
+ *
+ *       Fetches an image of the product's **category** from a free public source
+ *       (TheCocktailDB ingredient images), stores it under `uploads/products/`
+ *       and attaches it. These are representative of the type, **not
+ *       photographs of the product**, and the alt text says so.
+ *
+ *       A brand-photograph lookup was evaluated against Open Food Facts and
+ *       rejected: brand collisions returned the wrong product entirely (a wine
+ *       producer resolved to Spanish milk), its v2 search ignores `search_terms`,
+ *       and roughly two in five requests answered HTTP 503. On a platform
+ *       selling a regulated product, the wrong bottle is worse than no bottle.
+ *
+ *       Existing images are never overwritten unless `replaceExisting` is true.
+ *       Failures are counted and reported rather than aborting the run.
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id: { type: integer, description: 'One product only' }
+ *               vendorId: { type: integer, description: 'Staff only' }
+ *               productType: { type: string, enum: [BEER, WINE, WHISKEY, VODKA, GIN, RUM, TEQUILA, BRANDY, LIQUEUR, CHAMPAGNE, OTHER] }
+ *               status: { type: string, enum: [DRAFT, PENDING_APPROVAL, ACTIVE, INACTIVE, REJECTED] }
+ *               limit: { type: integer, default: 50, maximum: 200 }
+ *               replaceExisting: { type: boolean, default: false }
+ *     responses:
+ *       200:
+ *         description: Backfill finished, with a per-product outcome
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/SuccessResponse' }
+ *       403: { $ref: '#/components/responses/Forbidden' }
+ *       422: { $ref: '#/components/responses/ValidationError' }
+ */
+router.post(
+  '/images/backfill-category',
+  validate(schemas.backfillImagesSchema),
+  authenticate,
+  authorize(PERMISSIONS.PRODUCT_MANAGE),
+  controller.backfillCategoryImages
+);
+
+/**
+ * @openapi
  * /api/v1/products/images/set-primary:
  *   post:
  *     tags: [Catalog]

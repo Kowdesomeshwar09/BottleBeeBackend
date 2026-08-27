@@ -25,7 +25,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test:db:setup": "cross-env NODE_ENV=test sequelize-cli db:create && cross-env NODE_ENV=test sequelize-cli db:migrate && cross-env NODE_ENV=test sequelize-cli db:seed:all",
-    "test:db:reset": "cross-env NODE_ENV=test sequelize-cli db:drop && npm run test:db:setup"
+    "test:db:reset": "cross-env NODE_ENV=test sequelize-cli db:drop && npm run test:db:setup",
+    "images:fetch": "node scripts/fetch-product-images.js",
+    "images:fetch:dry": "node scripts/fetch-product-images.js --dry-run"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
