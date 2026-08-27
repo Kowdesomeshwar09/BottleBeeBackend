@@ -44,3 +44,7 @@ blob-report/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# The frontend is its own repository (see BottleBeeUi/.git).
+# Ignored here so it is never accidentally committed into the backend repo.
+BottleBeeUi/
