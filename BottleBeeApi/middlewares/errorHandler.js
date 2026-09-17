@@ -84,7 +84,7 @@ function normalize(err) {
   return AppError.internal(err.message || 'Something went wrong');
 }
 
-/* eslint-disable no-unused-vars */
+
 function errorHandler(err, req, res, next) {
   const appError = normalize(err);
 
@@ -108,6 +108,6 @@ function errorHandler(err, req, res, next) {
 
   return fail(res, message, appError.statusCode, appError.errors || [], appError.code);
 }
-/* eslint-enable no-unused-vars */
+
 
 module.exports = { errorHandler, notFound, normalize };

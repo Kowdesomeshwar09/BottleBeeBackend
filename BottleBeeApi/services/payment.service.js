@@ -29,12 +29,12 @@ function getProvider() {
 
   switch (config.payment.provider) {
     case PAYMENT_PROVIDER.RAZORPAY:
-      // eslint-disable-next-line global-require
+
       cached = require('./paymentProviders/razorpay.provider');
       break;
 
     case 'MOCK':
-      // eslint-disable-next-line global-require
+
       cached = require('./paymentProviders/mock.provider');
       break;
 

@@ -1,0 +1,76 @@
+name: API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'BottleBeeApi/**'
+      - '.github/workflows/api.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'BottleBeeApi/**'
+      - '.github/workflows/api.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: BottleBeeApi
+
+jobs:
+  test:
+    name: Lint and test
+    runs-on: ubuntu-latest
+
+    # The suite talks to a real MySQL. The schema is 42 tables with real foreign
+    # keys, CHECK constraints and conditional UPDATEs used for concurrency
+    # safety; an in-memory substitute would not enforce any of it, so the thing
+    # under test would not be the thing that ships.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-password"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ci-root-password
+      DB_NAME_TEST: bottle_bee_test
+      # Test mode supplies throwaway JWT secrets of its own, so none are needed
+      # here. Never put a real secret in a workflow file.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BottleBeeApi/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Create and migrate the test database
+        run: |
+          npx sequelize-cli db:create
+          npx sequelize-cli db:migrate
+
+      - name: Seed
+        run: npx sequelize-cli db:seed:all
+
+      - name: Test
+        run: npx jest --runInBand --ci

@@ -289,7 +289,7 @@ async function runCheckout(req) {
 const checkout = async (req, res) => {
   let attempt = 0;
 
-  /* eslint-disable no-await-in-loop */
+
   while (attempt < ORDER_NUMBER_RETRIES) {
     attempt += 1;
 
@@ -350,7 +350,7 @@ const checkout = async (req, res) => {
       return fail(res, 'Checkout failed', 500, [{ message: error.message }]);
     }
   }
-  /* eslint-enable no-await-in-loop */
+
 
   return fail(res, 'Could not allocate an order number. Please try again.', 500);
 };

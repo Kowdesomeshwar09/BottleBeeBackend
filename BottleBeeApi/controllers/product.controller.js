@@ -299,7 +299,7 @@ const create = async (req, res) => {
 
       if (req.body.variants?.length) {
         for (const variant of req.body.variants) {
-          // eslint-disable-next-line no-await-in-loop
+
           await createVariantRecord(record, variant, req.user.id, transaction);
         }
       }
@@ -949,7 +949,7 @@ const backfillCategoryImages = async (req, res) => {
         continue;
       }
 
-      // eslint-disable-next-line no-await-in-loop
+
       const image = await beverageImages.fetchCategoryImage(product.productType, {
         productName: product.name,
       });
@@ -960,7 +960,7 @@ const backfillCategoryImages = async (req, res) => {
         continue;
       }
 
-      // eslint-disable-next-line no-await-in-loop
+
       await sequelize.transaction(async (transaction) => {
         const existingCount = await ProductImage.count({
           where: { productId: product.id },

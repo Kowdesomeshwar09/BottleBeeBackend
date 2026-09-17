@@ -546,7 +546,7 @@ module.exports = {
       }]);
     }
 
-    /* eslint-disable no-console */
+
     console.log('');
     console.log('  Sample marketplace seeded');
     console.log(`    store    Jubilee Hills Wine Mart (APPROVED, licensed IN-TS)`);
@@ -556,7 +556,7 @@ module.exports = {
     console.log(`    password ${SAMPLE_PASSWORD}   (all three)`);
     console.log(`    coupons  ${COUPONS.map((c) => c.code).join(', ')}`);
     console.log('');
-    /* eslint-enable no-console */
+
   },
 
   async down(queryInterface) {
@@ -587,7 +587,7 @@ module.exports = {
     await queryInterface.bulkDelete('coupons', { code: COUPONS.map((c) => c.code) });
 
     for (const table of ['vendor_licenses', 'vendor_addresses', 'vendor_users']) {
-      // eslint-disable-next-line no-await-in-loop
+
       await sequelize.query(
         `DELETE t FROM ${table} t JOIN vendors v ON v.id = t.vendor_id WHERE v.email = :email`,
         { replacements: { email: VENDOR_OWNER.email } }

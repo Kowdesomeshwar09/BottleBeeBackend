@@ -81,7 +81,6 @@ async function main() {
       continue;
     }
 
-    // eslint-disable-next-line no-await-in-loop
     const image = await beverageImages.fetchCategoryImage(product.productType, {
       productName: product.name,
     });
@@ -92,7 +91,6 @@ async function main() {
       continue;
     }
 
-    // eslint-disable-next-line no-await-in-loop
     await sequelize.transaction(async (transaction) => {
       const existingCount = await ProductImage.count({
         where: { productId: product.id },

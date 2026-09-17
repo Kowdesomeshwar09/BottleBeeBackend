@@ -5,11 +5,11 @@ const { Op } = require('sequelize');
 const config = require('../config');
 const logger = require('../config/logger');
 const {
-  sequelize, Order, Payment, PaymentTransaction, Refund, CustomerProfile, Vendor,
+  sequelize, Order, Payment, PaymentTransaction, Refund, CustomerProfile,
 } = require('../models');
 const {
   ORDER_STATUS, ORDER_PAYMENT_STATUS, PAYMENT_STATUS, PAYMENT_TRANSACTION_TYPE,
-  PAYMENT_PROVIDER, REFUND_STATUS, ROLES, AUDIT_ACTIONS,
+  REFUND_STATUS, ROLES, AUDIT_ACTIONS,
 } = require('../config/constants');
 const { buildPagination, toPageMeta } = require('../utils/pagination');
 const { recordAudit } = require('../utils/audit');
@@ -21,7 +21,6 @@ const paymentService = require('../services/payment.service');
 const orderService = require('../services/order.service');
 const inventoryService = require('../services/inventory.service');
 const notificationService = require('../services/notification.service');
-const vendorAccessService = require('../services/vendorAccess.service');
 
 /**
  * Payments and refunds.

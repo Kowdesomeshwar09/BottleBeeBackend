@@ -2,10 +2,9 @@
 
 const { Op } = require('sequelize');
 
-const logger = require('../config/logger');
 const {
   sequelize, Order, DeliveryPartner, DeliveryAssignment, DeliveryTracking,
-  DeliveryStatusHistory, User, Vendor, CustomerProfile,
+  DeliveryStatusHistory, User,
 } = require('../models');
 const {
   ORDER_STATUS, ORDER_DELIVERY_STATUS, DELIVERY_ASSIGNMENT_STATUS,

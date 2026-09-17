@@ -85,7 +85,7 @@ async function reserve(items, { vendorId, orderId = null, actorId = null, transa
   for (const item of items) {
     const quantity = safeQuantity(item.quantity);
 
-    // eslint-disable-next-line no-await-in-loop
+
     const inventory = await Inventory.findOne({
       where: { vendorId, productVariantId: item.productVariantId },
       transaction,
@@ -98,7 +98,7 @@ async function reserve(items, { vendorId, orderId = null, actorId = null, transa
     }
 
     // The WHERE clause is the concurrency guard, not the read above.
-    // eslint-disable-next-line no-await-in-loop
+
     const [affected] = await Inventory.update(
       {
         quantityAvailable: sequelize.literal(`quantity_available - ${quantity}`),
@@ -123,10 +123,10 @@ async function reserve(items, { vendorId, orderId = null, actorId = null, transa
       );
     }
 
-    // eslint-disable-next-line no-await-in-loop
+
     await inventory.reload({ transaction });
 
-    // eslint-disable-next-line no-await-in-loop
+
     await writeLedger({
       inventory,
       transactionType: INVENTORY_TRANSACTION_TYPE.RESERVE,
@@ -153,7 +153,7 @@ async function release(items, { vendorId, orderId = null, actorId = null, reason
   for (const item of items) {
     const quantity = safeQuantity(item.quantity);
 
-    // eslint-disable-next-line no-await-in-loop
+
     const inventory = await Inventory.findOne({
       where: { vendorId, productVariantId: item.productVariantId },
       transaction,
@@ -165,7 +165,7 @@ async function release(items, { vendorId, orderId = null, actorId = null, reason
     const releasable = Math.min(quantity, inventory.quantityReserved);
     if (releasable <= 0) continue;
 
-    // eslint-disable-next-line no-await-in-loop
+
     await Inventory.update(
       {
         quantityAvailable: sequelize.literal(`quantity_available + ${releasable}`),
@@ -175,10 +175,10 @@ async function release(items, { vendorId, orderId = null, actorId = null, reason
       { where: { id: inventory.id }, transaction }
     );
 
-    // eslint-disable-next-line no-await-in-loop
+
     await inventory.reload({ transaction });
 
-    // eslint-disable-next-line no-await-in-loop
+
     await writeLedger({
       inventory,
       transactionType: INVENTORY_TRANSACTION_TYPE.RELEASE,
@@ -209,7 +209,7 @@ async function commitSale(items, { vendorId, orderId = null, actorId = null, tra
   for (const item of items) {
     const quantity = safeQuantity(item.quantity);
 
-    // eslint-disable-next-line no-await-in-loop
+
     const inventory = await Inventory.findOne({
       where: { vendorId, productVariantId: item.productVariantId },
       transaction,
@@ -219,7 +219,7 @@ async function commitSale(items, { vendorId, orderId = null, actorId = null, tra
     const sellable = Math.min(quantity, inventory.quantityReserved);
     if (sellable <= 0) continue;
 
-    // eslint-disable-next-line no-await-in-loop
+
     await Inventory.update(
       {
         quantityReserved: sequelize.literal(`quantity_reserved - ${sellable}`),
@@ -228,10 +228,10 @@ async function commitSale(items, { vendorId, orderId = null, actorId = null, tra
       { where: { id: inventory.id }, transaction }
     );
 
-    // eslint-disable-next-line no-await-in-loop
+
     await inventory.reload({ transaction });
 
-    // eslint-disable-next-line no-await-in-loop
+
     await writeLedger({
       inventory,
       transactionType: INVENTORY_TRANSACTION_TYPE.SALE,
@@ -262,14 +262,14 @@ async function returnStock(items, { vendorId, orderId = null, actorId = null, tr
   for (const item of items) {
     const quantity = safeQuantity(item.quantity);
 
-    // eslint-disable-next-line no-await-in-loop
+
     const inventory = await Inventory.findOne({
       where: { vendorId, productVariantId: item.productVariantId },
       transaction,
     });
     if (!inventory) continue;
 
-    // eslint-disable-next-line no-await-in-loop
+
     await Inventory.update(
       {
         quantityAvailable: sequelize.literal(`quantity_available + ${quantity}`),
@@ -278,10 +278,10 @@ async function returnStock(items, { vendorId, orderId = null, actorId = null, tr
       { where: { id: inventory.id }, transaction }
     );
 
-    // eslint-disable-next-line no-await-in-loop
+
     await inventory.reload({ transaction });
 
-    // eslint-disable-next-line no-await-in-loop
+
     await writeLedger({
       inventory,
       transactionType: INVENTORY_TRANSACTION_TYPE.RETURN,
@@ -307,7 +307,7 @@ async function checkAvailability(items, vendorId) {
   const shortfalls = [];
 
   for (const item of items) {
-    // eslint-disable-next-line no-await-in-loop
+
     const inventory = await Inventory.findOne({
       where: { vendorId, productVariantId: item.productVariantId },
       include: [{

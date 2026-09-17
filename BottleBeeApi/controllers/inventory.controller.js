@@ -330,16 +330,16 @@ const bulkAdjust = async (req, res) => {
 
     for (const entry of req.body.items) {
       try {
-        // eslint-disable-next-line no-await-in-loop
+
         const inventory = await Inventory.findByPk(entry.id, { include: [withRelations] });
         if (!inventory) throw AppError.notFound('Inventory record not found');
 
-        // eslint-disable-next-line no-await-in-loop
+
         await vendorAccessService.assertVendorAccess(inventory.vendorId, req, {
           requireRoles: [VENDOR_ROLE.OWNER, VENDOR_ROLE.MANAGER],
         });
 
-        // eslint-disable-next-line no-await-in-loop
+
         const before = await applyAdjustment({
           inventory,
           body: {
@@ -351,7 +351,7 @@ const bulkAdjust = async (req, res) => {
           actorId: req.user.id,
         });
 
-        // eslint-disable-next-line no-await-in-loop
+
         await recordAudit({
           action: AUDIT_ACTIONS.INVENTORY_ADJUSTED,
           entityType: 'Inventory',
@@ -364,7 +364,7 @@ const bulkAdjust = async (req, res) => {
           req,
         });
 
-        // eslint-disable-next-line no-await-in-loop
+
         await warnIfLowStock(inventory);
 
         items.push(serialize(inventory));

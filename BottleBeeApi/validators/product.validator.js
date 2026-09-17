@@ -1,7 +1,7 @@
 'use strict';
 
 const {
-  Joi, requiredId, id, name, longText, url, money, percent, shortText, regionCode,
+  Joi, requiredId, id, name, longText, money, percent, shortText, regionCode,
   enumOf, listSchema,
 } = require('./common');
 const { PRODUCT_TYPE, PRODUCT_STATUS, VARIANT_STATUS } = require('../config/constants');

@@ -183,14 +183,14 @@ async function releaseRedemption({ orderId, transaction, actorId = null }) {
   if (!usages.length) return 0;
 
   for (const usage of usages) {
-    // eslint-disable-next-line no-await-in-loop
+
     await Coupon.update(
       { usageCount: sequelize.literal('GREATEST(usage_count - 1, 0)'), updatedBy: actorId },
       { where: { id: usage.couponId }, transaction }
     );
-    // eslint-disable-next-line no-await-in-loop
+
     await usage.update({ deletedBy: actorId }, { transaction });
-    // eslint-disable-next-line no-await-in-loop
+
     await usage.destroy({ transaction });
   }
 

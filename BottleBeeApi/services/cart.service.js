@@ -119,7 +119,7 @@ async function recalculate(cart, { transaction = null, req = null } = {}) {
   );
 
   for (const line of totals.lines) {
-    // eslint-disable-next-line no-await-in-loop
+
     await CartItem.update(
       { unitPrice: line.unitPrice, lineTotal: line.lineTotal, updatedBy: req?.user?.id ?? null },
       { where: { id: line.cartItemId }, transaction }

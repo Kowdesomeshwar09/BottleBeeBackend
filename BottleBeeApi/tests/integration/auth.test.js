@@ -15,7 +15,7 @@ describe('auth', () => {
   beforeAll(async () => {
     available = await db.isAvailable();
     if (!available) {
-      // eslint-disable-next-line no-console
+
       console.warn('  bottle_bee_test not reachable — skipping. Run: npm run test:db:setup');
     }
   });

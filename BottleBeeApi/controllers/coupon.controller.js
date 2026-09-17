@@ -312,7 +312,7 @@ const available = async (req, res) => {
       if (coupon.usageLimit !== null && coupon.usageCount >= coupon.usageLimit) continue;
 
       if (coupon.usageLimitPerUser !== null) {
-        // eslint-disable-next-line no-await-in-loop
+
         const used = await CouponUsage.count({
           where: { couponId: coupon.id, userId: req.user.id },
         });

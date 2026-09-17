@@ -128,7 +128,6 @@ async function fetchCategoryImage(productType, { productName = 'this product' } 
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
     try {
-      // eslint-disable-next-line no-await-in-loop
       const result = await download(url, { signal: controller.signal });
 
       return {

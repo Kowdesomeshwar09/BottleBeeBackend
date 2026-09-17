@@ -1,7 +1,7 @@
 'use strict';
 
 const {
-  Joi, requiredId, shortText, url, enumOf, listSchema,
+  Joi, requiredId, enumOf, listSchema,
 } = require('./common');
 const { NOTIFICATION_CHANNEL, NOTIFICATION_STATUS } = require('../config/constants');
 

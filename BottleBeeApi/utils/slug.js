@@ -24,7 +24,6 @@ async function uniqueSlug(model, text, { scope = {}, excludeId = null, transacti
   let candidate = base;
   let suffix = 1;
 
-  /* eslint-disable no-await-in-loop */
   while (true) {
     const where = { ...scope, [column]: candidate };
     if (excludeId) where.id = { [Op.ne]: excludeId };
@@ -35,7 +34,7 @@ async function uniqueSlug(model, text, { scope = {}, excludeId = null, transacti
     suffix += 1;
     candidate = `${base}-${suffix}`;
   }
-  /* eslint-enable no-await-in-loop */
+
 }
 
 module.exports = { slugify, uniqueSlug };

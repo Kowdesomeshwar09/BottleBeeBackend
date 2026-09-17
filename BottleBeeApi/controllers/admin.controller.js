@@ -3,11 +3,11 @@
 const { Op } = require('sequelize');
 
 const {
-  sequelize, User, Vendor, VendorLicense, Product, Order, Payment, Refund, Review,
+  sequelize, User, Vendor, VendorLicense, Product, Order, Refund, Review,
   AgeVerification, DeliveryPartner, DeliveryAssignment, Inventory, AuditLog, CustomerProfile,
 } = require('../models');
 const {
-  ORDER_STATUS, ORDER_PAYMENT_STATUS, VENDOR_STATUS, PRODUCT_STATUS,
+  ORDER_STATUS, VENDOR_STATUS, PRODUCT_STATUS,
   VERIFICATION_STATUS, REVIEW_STATUS, REFUND_STATUS, DELIVERY_PARTNER_STATUS,
   ACCOUNT_STATUS,
 } = require('../config/constants');

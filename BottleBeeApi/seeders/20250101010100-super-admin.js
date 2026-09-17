@@ -50,14 +50,14 @@ module.exports = {
       );
       userId = created[0].id;
 
-      /* eslint-disable no-console */
+
       console.log('');
       console.log('  Super admin created');
       console.log(`    email:    ${email}`);
       console.log(`    password: ${config.superAdmin.password}`);
       console.log('    Change this password immediately after first sign-in.');
       console.log('');
-      /* eslint-enable no-console */
+
     }
 
     const role = await sequelize.query(
